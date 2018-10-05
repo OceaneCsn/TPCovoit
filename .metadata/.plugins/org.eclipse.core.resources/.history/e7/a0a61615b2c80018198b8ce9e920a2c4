@@ -1,0 +1,93 @@
+package CovoitClasses;
+
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import jade.core.AID;
+
+public class CovoitAgentGui extends JFrame{
+	
+	private CovoitAgent myAgent;
+	private JTextField leavingTimeField, priceField;
+	private JComboBox<String> startingCityField, targetCityField, carScoreField;
+
+	CovoitAgentGui(CovoitAgent a) {
+		super(a.getLocalName());
+		
+		myAgent = a;
+		
+		JPanel p = new JPanel();
+		p.setLayout(new GridLayout(6, 2));
+		
+		p.add(new JLabel("Going from :"));
+		String[] startingCities = {"Lyon","Montpellier","Paris"};
+		startingCityField = new JComboBox<String>(startingCities);
+		p.add(startingCityField);
+		
+		p.add(new JLabel("To :"));
+		String[] targetCities = {"Montpellier","Lyon","Paris"};
+		targetCityField = new JComboBox<String>(targetCities);
+		p.add(targetCityField);
+		
+		p.add(new JLabel("Leaving at (in hours, from 0 to 24): "));
+		leavingTimeField = new JTextField(15);
+		p.add(leavingTimeField);
+		
+		p.add(new JLabel("Car score :"));
+		String[] scores = {"Awesome","Nice","Correct", "Bad"};
+		carScoreField = new JComboBox<String>(scores);
+		p.add(carScoreField);
+		
+		
+		
+		p.add(new JLabel("Price :"));
+		priceField = new JTextField(15);
+		p.add(priceField);
+		
+		
+		getContentPane().add(p, BorderLayout.CENTER);
+		
+		JButton addButton = new JButton("Ok");
+		addButton.addActionListener( new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				try {
+					String startingCity = (String)startingCityField.getSelectedItem();
+					String targetCity = (String)targetCityField.getSelectedItem();
+					String price = priceField.getText().trim();
+					String leavingTime = leavingTimeField.getText().trim();
+					String carScore = (String)carScoreField.getSelectedItem();
+					myAgent.updateTravel(title, Integer.parseInt(price),state);
+					titleField.setEnabled(false);
+					priceField.setEnabled(false);
+					stateField.setEnabled(false);
+				}
+				catch (Exception e) {
+					JOptionPane.showMessageDialog(BookBuyerGui.this, "Invalid values. "+e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE); 
+				}
+			}
+		} );
+		p = new JPanel();
+		p.add(addButton);
+		getContentPane().add(p, BorderLayout.SOUTH);
+		
+		// Make the agent terminate when the user closes 
+		// the GUI using the button on the upper right corner	
+		addWindowListener(new	WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				myAgent.doDelete();
+			}
+		} );
+		
+		setResizable(false);
+	}
+	
+	public void showGui() {
+		pack();
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		int centerX = (int)screenSize.getWidth() / 2;
+		int centerY = (int)screenSize.getHeight() / 2;
+		setLocation(centerX - getWidth() / 2, centerY - getHeight() / 2);
+		super.setVisible(true);
+	}	
+
+}

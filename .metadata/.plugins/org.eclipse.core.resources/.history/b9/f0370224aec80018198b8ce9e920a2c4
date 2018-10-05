@@ -1,0 +1,10 @@
+package CovoitClasses;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+
+import jade.core.AID;
+
+public class CovoitAgentGui {
+
+}
