@@ -1,0 +1,53 @@
+package CovoitClasses;
+import java.util.*;
+
+import jade.core.AID;
+import jade.core.Agent;
+import jade.core.behaviours.*;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.domain.DFService;
+import jade.domain.FIPAException;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+
+
+public class CovoitAgent extends Agent {
+	
+	//private CovoitGui mygui;
+	
+	private String startingCity;
+	private String targetCity;
+	private int leavingTime;
+	private int carScore;
+	private int nbPlaces;
+	
+	private ArrayList<AID> acquaintances;
+	
+	protected void setup( ) {
+		
+		startingCity = "Montpellier";
+		targetCity = "Lyon";
+		leavingTime = 15;
+		carScore = 4;
+		nbPlaces = 3;
+		
+		// Register the book-selling service in the yellow pages
+		DFAgentDescription dfd = new DFAgentDescription();
+		dfd.setName(getAID());
+		ServiceDescription sd = new ServiceDescription();
+		sd.setType(startingCity+";"+targetCity);
+		sd.setName("JADE-covoit");
+		dfd.addServices(sd);
+		try {
+			DFService.register(this, dfd);
+		}
+		catch (FIPAException fe) {
+			fe.printStackTrace();
+		}
+		
+		addBehavior();
+
+	}
+
+}

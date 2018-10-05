@@ -1,0 +1,22 @@
+TP SMA
+
+coalition : objectifs individuels prédominants, objectif collectif temporaire
+
+groupe : objectif collectif prédominant
+
+Dans les contraintes : on ne met que le tarif (date, place pour plus tard)
+
+L'agent initial recrute tous les autres : on connait les induvidus et leur lieu cible.
+
+répartition éqiutable des prix entre voyageurs. On dit à celui qui rejoint 
+
+Ils ont tous une voiture, et si certains ont le même trajet ils covoiturent.
+Soit on répond tout de suite à une offre, soit in essaie de monter sa propre coalition = concurrence.
+Toutes les offres sont engageantes. On peut annuler mais on paye quand même le prix.
+
+On commence par regarder ses messages.
+Si on a pas été contacté ou qu'on refuse des demandes, on envoit des demandes.
+
+dérouler un exemple dans le rapport, dire les choses qui marchent, et celles qui ne marchent pas, et pourquoi.
+
+C'est fini quand tout le monde a formé ses coalitions
