@@ -90,7 +90,7 @@ public class CovoitAgent extends Agent {
 					}
 					acquaintances.remove(getAID());
 					for(AID a:passengers) {
-						//System.out.println(a+" removed");
+						System.out.println(a+" removed");
 						acquaintances.remove(a);
 					}
 					for(AID a:refused) {
@@ -107,7 +107,7 @@ public class CovoitAgent extends Agent {
 				
 				for (int i = 0; i < acquaintances.size(); ++i) {
 					cfp.addReceiver(acquaintances.get(i));
-					//System.out.println(getAID().getName()+"sending cfp to "+acquaintances.get(i).getName());
+					System.out.println(getAID().getName()+"sending cfp to "+acquaintances.get(i).getName());
 				} 
 				cfp.setContent(String.valueOf(price));
 				cfp.setConversationId("covoit_cfp");
@@ -162,11 +162,11 @@ public class CovoitAgent extends Agent {
 				}
 				
 			}
-			/*try{
+			try{
 				Thread.sleep(1000);
 				//System.out.println("pause");
 			}
-			catch(InterruptedException e){}*/
+			catch(InterruptedException e){}
 		}
 	}
 	
@@ -178,7 +178,7 @@ public class CovoitAgent extends Agent {
 				//System.out.println(getAID().getName()+" before received cfp "+msg.getPerformative());
 
 				if(msg != null) {
-					//System.out.println(getAID().getName()+" received cfp"+msg.getPerformative());
+					System.out.println(getAID().getName()+" received cfp"+msg.getPerformative());
 
 					ACLMessage proposal = msg.createReply();
 					// if the proposed price is inferior than the the price of the agent's travel on its own
@@ -210,11 +210,11 @@ public class CovoitAgent extends Agent {
 					block();
 				}
 			}
-			/*try{
-				//Thread.sleep(2000);
+			try{
+				Thread.sleep(2000);
 				//System.out.println("pause");
 			}
-			catch(InterruptedException e){}*/
+			catch(InterruptedException e){}
 		}
 	}
 	

@@ -72,7 +72,7 @@ public class CovoitAgent extends Agent {
 		public void action(){
 			
 			if(recruited) {
-				//System.out.println(getAID().getName()+" recruited at the beginning of the loop");
+				System.out.println(getAID().getName()+" recruited at the beginning of the loop");
 			}
 			
 			if(!recruited) {
@@ -90,7 +90,7 @@ public class CovoitAgent extends Agent {
 					}
 					acquaintances.remove(getAID());
 					for(AID a:passengers) {
-						//System.out.println(a+" removed");
+						System.out.println(a+" removed");
 						acquaintances.remove(a);
 					}
 					for(AID a:refused) {
@@ -107,13 +107,13 @@ public class CovoitAgent extends Agent {
 				
 				for (int i = 0; i < acquaintances.size(); ++i) {
 					cfp.addReceiver(acquaintances.get(i));
-					//System.out.println(getAID().getName()+"sending cfp to "+acquaintances.get(i).getName());
+					System.out.println(getAID().getName()+"sending cfp to "+acquaintances.get(i).getName());
 				} 
 				cfp.setContent(String.valueOf(price));
 				cfp.setConversationId("covoit_cfp");
 				cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
 				myAgent.send(cfp);
-				//System.out.println(cfp.getReplyWith());
+				System.out.println(cfp.getReplyWith());
 				/*mt = MessageTemplate.and(MessageTemplate.MatchConversationId("covoit_cfp"),
 						MessageTemplate.MatchInReplyTo(cfp.getReplyWith()));*/
 				//Prepare the template to get proposals
@@ -121,14 +121,14 @@ public class CovoitAgent extends Agent {
 				//mt = MessageTemplate.MatchInReplyTo(cfp.getReplyWith());
 				ACLMessage reply = myAgent.receive(mt);
 				if(reply != null) {
-					//System.out.println("cfp proposal received, not null");
+					System.out.println("cfp proposal received, not null");
 					already_recruited = false;
 					for(AID a:passengers) {
 						if(a.equals(reply.getSender())) {
 							already_recruited=true;
 						}
 					}
-					//System.out.println("already_recruited : "+already_recruited+ reply.getPerformative());
+					System.out.println("already_recruited : "+already_recruited+ reply.getPerformative());
 					if(reply.getPerformative()== ACLMessage.PROPOSE && !already_recruited) {
 						System.out.println("cfp proposal");
 						passengers.add(reply.getSender());
@@ -162,11 +162,11 @@ public class CovoitAgent extends Agent {
 				}
 				
 			}
-			/*try{
+			try{
 				Thread.sleep(1000);
 				//System.out.println("pause");
 			}
-			catch(InterruptedException e){}*/
+			catch(InterruptedException e){}
 		}
 	}
 	
@@ -178,7 +178,7 @@ public class CovoitAgent extends Agent {
 				//System.out.println(getAID().getName()+" before received cfp "+msg.getPerformative());
 
 				if(msg != null) {
-					//System.out.println(getAID().getName()+" received cfp"+msg.getPerformative());
+					System.out.println(getAID().getName()+" received cfp");
 
 					ACLMessage proposal = msg.createReply();
 					// if the proposed price is inferior than the the price of the agent's travel on its own
@@ -210,11 +210,11 @@ public class CovoitAgent extends Agent {
 					block();
 				}
 			}
-			/*try{
-				//Thread.sleep(2000);
+			try{
+				Thread.sleep(2000);
 				//System.out.println("pause");
 			}
-			catch(InterruptedException e){}*/
+			catch(InterruptedException e){}
 		}
 	}
 	
