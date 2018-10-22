@@ -33,6 +33,35 @@ public class CovoitAgent extends Agent {
 		myGui = new CovoitAgentGui(this);
 		myGui.showGui();
 		
+		
+		
+	}
+	
+	protected void init() {		
+		/*startingCity = "Montpellier";
+		targetCity = "Lyon";
+		leavingTime = 15;
+		carScore = 4;
+		nbPlaces = 3;
+		price = 4; */
+		passengers = new ArrayList<AID>();
+		refused = new ArrayList<AID>();
+		recruited = false;
+		
+		// Register the book-selling service in the yellow pages
+		DFAgentDescription dfd = new DFAgentDescription();
+		dfd.setName(getAID());
+		ServiceDescription sd = new ServiceDescription();
+		sd.setType(startingCity+";"+targetCity);
+		sd.setName("JADE-covoit");
+		dfd.addServices(sd);
+		try {
+			DFService.register(this, dfd);
+		}
+		catch (FIPAException fe) {
+			fe.printStackTrace();
+		}
+		//passenger agent behavior
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			protected void onTick() {
 				if(passengers.size() == 0 && !recruited) {
@@ -51,13 +80,12 @@ public class CovoitAgent extends Agent {
 							proposal.addReceiver(msg.getSender());
 							proposal.setContent("ok");
 							proposal.setConversationId("covoit_cfp");
-							System.out.println(getAID().getName()+" sent a proposal");
 						}
 						else {
 							
 							proposal.setPerformative(ACLMessage.REFUSE);
 						}
-						System.out.println(proposal.getInReplyTo());
+						//System.out.println(proposal.getInReplyTo());
 						myAgent.send(proposal);
 					}
 					else {
@@ -81,6 +109,7 @@ public class CovoitAgent extends Agent {
 			}
 		} );
 		
+		//driver agent behavior
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			private MessageTemplate mt;
 			private Boolean already_recruited;
@@ -121,13 +150,11 @@ public class CovoitAgent extends Agent {
 					
 					for (int i = 0; i < acquaintances.size(); ++i) {
 						cfp.addReceiver(acquaintances.get(i));
-						//System.out.println(getAID().getName()+"sending cfp to "+acquaintances.get(i).getName());
 					} 
 					cfp.setContent(String.valueOf(price));
 					cfp.setConversationId("covoit_cfp");
 					cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
 					myAgent.send(cfp);
-					//System.out.println(cfp.getReplyWith());
 					/*mt = MessageTemplate.and(MessageTemplate.MatchConversationId("covoit_cfp"),
 							MessageTemplate.MatchInReplyTo(cfp.getReplyWith()));*/
 					//Prepare the template to get proposals
@@ -135,14 +162,12 @@ public class CovoitAgent extends Agent {
 					//mt = MessageTemplate.MatchInReplyTo(cfp.getReplyWith());
 					ACLMessage reply = myAgent.receive(mt);
 					if(reply != null) {
-						//System.out.println("cfp proposal received, not null");
 						already_recruited = false;
 						for(AID a:passengers) {
 							if(a.equals(reply.getSender())) {
 								already_recruited=true;
 							}
 						}
-						//System.out.println("already_recruited : "+already_recruited+ reply.getPerformative());
 						if(reply.getPerformative()== ACLMessage.PROPOSE && !already_recruited) {
 							System.out.println("cfp proposal");
 							passengers.add(reply.getSender());
@@ -153,8 +178,8 @@ public class CovoitAgent extends Agent {
 							confirm.setConversationId("covoit");
 							myAgent.send(confirm);
 							System.out.println(getAID().getName()+" accepted proposal from"+reply.getSender().getName());
-							System.out.println(String.valueOf(passengers.size()));
-							System.out.println(String.valueOf(nbPlaces));
+							System.out.println("Number of passengers : "+String.valueOf(passengers.size()));
+							System.out.println("Remaning seats : "+String.valueOf(nbPlaces));
 							
 							if(nbPlaces == 0){
 								for(AID a : passengers) {
@@ -183,34 +208,6 @@ public class CovoitAgent extends Agent {
 				catch(InterruptedException e){}*/
 			}
 		} );
-		
-	}
-	
-	protected void init() {		
-		/*startingCity = "Montpellier";
-		targetCity = "Lyon";
-		leavingTime = 15;
-		carScore = 4;
-		nbPlaces = 3;
-		price = 4; */
-		passengers = new ArrayList<AID>();
-		refused = new ArrayList<AID>();
-		recruited = false;
-		
-		// Register the book-selling service in the yellow pages
-		DFAgentDescription dfd = new DFAgentDescription();
-		dfd.setName(getAID());
-		ServiceDescription sd = new ServiceDescription();
-		sd.setType(startingCity+";"+targetCity);
-		sd.setName("JADE-covoit");
-		dfd.addServices(sd);
-		try {
-			DFService.register(this, dfd);
-		}
-		catch (FIPAException fe) {
-			fe.printStackTrace();
-		}
-		
 		addBehaviour(new PleaseDie());
 	}
 	

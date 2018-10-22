@@ -3,7 +3,6 @@ package CovoitClasses;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import jade.core.AID;
 import java.util.*;
 
 
@@ -21,13 +20,17 @@ public class CovoitAgentGui extends JFrame{
 		myAgent = a;
 		
 		JPanel p = new JPanel();
-		p.setLayout(new GridLayout(6, 2));
+		p.setLayout(new GridLayout(7, 2));
 		
 		state_to_num = new Hashtable();
 		state_to_num.put("Awesome", 1);
 		state_to_num.put("Nice", 2);
 		state_to_num.put("Correct", 3);
 		state_to_num.put("Bad", 4);
+		
+		p.add(new JLabel("Carpooling agent settings"));
+		p.add(new JLabel(""));
+
 		
 		p.add(new JLabel("Going from :"));
 		String[] startingCities = {"Lyon","Montpellier","Paris"};
@@ -50,8 +53,8 @@ public class CovoitAgentGui extends JFrame{
 		p.add(placesField);
 		
 		p.add(new JLabel("Car score :"));
-		//String[] scores = {"Awesome","Nice","Correct", "Bad"};
-		String[] scores = {"1","2","3", "4"};
+		String[] scores = {"Awesome","Nice","Correct", "Bad"};
+		//String[] scores = {"1","2","3", "4"};
 		carScoreField = new JComboBox<String>(scores);
 		p.add(carScoreField);
 				
@@ -73,7 +76,7 @@ public class CovoitAgentGui extends JFrame{
 					String places = placesField.getText().trim();
 					String leavingTime = leavingTimeField.getText().trim();
 					String carScore = (String)carScoreField.getSelectedItem();
-					myAgent.updateTravel(startingCity, targetCity, Integer.parseInt(leavingTime), Integer.parseInt(carScore),Integer.parseInt(places), Integer.parseInt(price));
+					myAgent.updateTravel(startingCity, targetCity, Integer.parseInt(leavingTime), state_to_num.get(carScore),Integer.parseInt(places), Integer.parseInt(price));
 					/*titleField.setEnabled(false);
 					priceField.setEnabled(false);
 					stateField.setEnabled(false);*/
