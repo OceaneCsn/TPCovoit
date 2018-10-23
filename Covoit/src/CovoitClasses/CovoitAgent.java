@@ -16,18 +16,18 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 
 public class CovoitAgent extends Agent {
 	
-	private CovoitAgentGui myGui;
-	
-	private String startingCity;
-	private String targetCity;
-	private int leavingTime;
-	private int carScore;
-	private int nbPlaces;
-	private ArrayList<AID> passengers;
-	private ArrayList<AID> refused;
-	private int price;
-	private ArrayList<AID> acquaintances;
-	private Boolean recruited;
+	protected CovoitAgentGui myGui;
+	protected String startingCity;
+	protected String targetCity;
+	protected int leavingTime;
+	protected int carScore;
+	protected int nbPlaces;
+	protected ArrayList<AID> passengers;
+	protected ArrayList<AID> refused;
+	protected int price;
+	protected ArrayList<AID> acquaintances;
+	protected Boolean recruited;
+	//private 
 	
 	protected void setup() {
 		myGui = new CovoitAgentGui(this);
@@ -61,6 +61,10 @@ public class CovoitAgent extends Agent {
 		catch (FIPAException fe) {
 			fe.printStackTrace();
 		}
+		this.behaviors();
+	}
+	
+	protected void behaviors() {
 		//passenger agent behavior
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			protected void onTick() {
@@ -111,8 +115,8 @@ public class CovoitAgent extends Agent {
 		
 		//driver agent behavior
 		addBehaviour(new TickerBehaviour(this, 10000) {
-			private MessageTemplate mt;
-			private Boolean already_recruited;
+			protected MessageTemplate mt;
+			protected Boolean already_recruited;
 			protected void onTick() {
 				if(recruited) {
 					//System.out.println(getAID().getName()+" recruited at the beginning of the loop");
