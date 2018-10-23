@@ -60,7 +60,7 @@ public class CovoitAgentGui extends JFrame{
 				
 		p.add(new JLabel("Price :"));
 		priceField = new JTextField(15);
-		priceField.setText("4");
+		priceField.setText("40");
 		p.add(priceField);
 		
 		

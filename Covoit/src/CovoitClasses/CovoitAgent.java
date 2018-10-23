@@ -61,6 +61,8 @@ public class CovoitAgent extends Agent {
 		catch (FIPAException fe) {
 			fe.printStackTrace();
 		}
+		addBehaviour(new PleaseDie());
+		addBehaviour(new cancelPassenger());
 		this.behaviors();
 	}
 	
@@ -129,7 +131,6 @@ public class CovoitAgent extends Agent {
 					template.addServices(sd);
 					try {
 						DFAgentDescription[] result = DFService.search(myAgent, template); 
-						//System.out.println("Found the following agents:");
 						acquaintances = new ArrayList(result.length);
 						for (int i = 0; i < result.length; ++i) {
 							acquaintances.add(result[i].getName());
@@ -137,7 +138,6 @@ public class CovoitAgent extends Agent {
 						}
 						acquaintances.remove(getAID());
 						for(AID a:passengers) {
-							//System.out.println(a+" removed");
 							acquaintances.remove(a);
 						}
 						for(AID a:refused) {
@@ -149,36 +149,30 @@ public class CovoitAgent extends Agent {
 					}
 					
 					
-					//envoi aux premier passager potentiel
+					//envoi aux passagers potentiels
 					ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
 					
 					for (int i = 0; i < acquaintances.size(); ++i) {
-						cfp.addReceiver(acquaintances.get(i));
+						if(!passengers.contains(acquaintances.get(i))) {
+							cfp.addReceiver(acquaintances.get(i));
+						}
 					} 
-					cfp.setContent(String.valueOf(price));
+					cfp.setContent(String.valueOf(price/(2+passengers.size())));
 					cfp.setConversationId("covoit_cfp");
 					cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
 					myAgent.send(cfp);
-					/*mt = MessageTemplate.and(MessageTemplate.MatchConversationId("covoit_cfp"),
-							MessageTemplate.MatchInReplyTo(cfp.getReplyWith()));*/
 					//Prepare the template to get proposals
 					mt = MessageTemplate.MatchConversationId("covoit_cfp");
-					//mt = MessageTemplate.MatchInReplyTo(cfp.getReplyWith());
 					ACLMessage reply = myAgent.receive(mt);
 					if(reply != null) {
-						already_recruited = false;
-						for(AID a:passengers) {
-							if(a.equals(reply.getSender())) {
-								already_recruited=true;
-							}
-						}
-						if(reply.getPerformative()== ACLMessage.PROPOSE && !already_recruited) {
-							System.out.println("cfp proposal");
-							passengers.add(reply.getSender());
+						
+						if(reply.getPerformative()== ACLMessage.PROPOSE) {
+				
 							nbPlaces --;
 							ACLMessage confirm = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 							confirm.addReceiver(reply.getSender());
-							confirm.setContent(String.valueOf(price/(1+acquaintances.size())));
+							confirm.setContent(String.valueOf(price/(2+passengers.size())));
+							passengers.add(reply.getSender());
 							confirm.setConversationId("covoit");
 							myAgent.send(confirm);
 							System.out.println(getAID().getName()+" accepted proposal from"+reply.getSender().getName());
@@ -186,6 +180,7 @@ public class CovoitAgent extends Agent {
 							System.out.println("Remaning seats : "+String.valueOf(nbPlaces));
 							
 							if(nbPlaces == 0){
+								//kills all the agents as they all formed their definitive coalition
 								for(AID a : passengers) {
 									ACLMessage die = new ACLMessage(ACLMessage.REQUEST);
 									die.addReceiver(a);
@@ -212,7 +207,7 @@ public class CovoitAgent extends Agent {
 				catch(InterruptedException e){}*/
 			}
 		} );
-		addBehaviour(new PleaseDie());
+
 	}
 	
 	// initialize key variables
@@ -223,7 +218,7 @@ public class CovoitAgent extends Agent {
 		carScore = cScore;
 		nbPlaces = nbP;
 		price = pr;
-		System.out.println("Agent "+getAID().getName()+" going from "+startingCity+" to "+targetCity);
+		System.out.println("Agent "+getAID().getName()+" going from "+startingCity+" to "+targetCity+ " at price "+String.valueOf(price));
 		this.init();
 	}
 	
@@ -263,8 +258,10 @@ public class CovoitAgent extends Agent {
 		public void action(){
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CANCEL);
 			ACLMessage msg = myAgent.receive(mt);
+			//System.out.println("wainting cancel received!");
 			if(msg != null) {
-				if(msg.getConversationId().equals("apoptosis")) {
+				System.out.println("canel received!");
+				if(msg.getConversationId().equals("cancel")) {
 					System.out.println("Agent "+getAID().getName()+" deletes "+msg.getSender().getName()+" of its passengers");
 					passengers.remove(msg.getSender());
 					nbPlaces ++;
@@ -272,7 +269,4 @@ public class CovoitAgent extends Agent {
 			}
 		}
 	}
-	
-	
-
 }
