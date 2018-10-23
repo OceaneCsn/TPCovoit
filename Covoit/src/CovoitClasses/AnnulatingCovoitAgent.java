@@ -15,13 +15,27 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 
 public class AnnulatingCovoitAgent extends CovoitAgent {
 	
+	// ici toutes les methodes vont etre les memes (init, takedown...) a part les behaviors
+	// et le setup dans lequel on ajoute juste la proba d'annuler
+	//on redefinit juste la methode des behaviors et les autres seront celles de CovoitAgent
+	
 	protected double anulation_proba;
+	protected AID current_recruiter;
+	protected int current_price;
+	
+	protected void setup() {
+		super.setup();
+		anulation_proba = 0.8;
+		current_price = price;
+	}
 	
 	protected void behaviors() {
+		//sera appelée dans la méthode init() de CovoitAgent
+		
 		//passenger agent behavior
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			protected void onTick() {
-				if(passengers.size() == 0 && !recruited) {
+				if(passengers.size() == 0) {
 					MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
 					ACLMessage msg = myAgent.receive(mt);
 					//System.out.println(getAID().getName()+" before received cfp "+msg.getPerformative());
@@ -31,18 +45,22 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 
 						ACLMessage proposal = msg.createReply();
 						// if the proposed price is inferior than the the price of the agent's travel on its own
-						if(Integer.parseInt(msg.getContent()) <= price) {
-							//System.out.println("received price interesting");
-							proposal.setPerformative(ACLMessage.PROPOSE);
-							proposal.addReceiver(msg.getSender());
-							proposal.setContent("ok");
-							proposal.setConversationId("covoit_cfp");
+						if(Integer.parseInt(msg.getContent()) <= current_price) {
+							System.out.println("received price interesting");
+							//
+							// on envoie une proposition que si le recruter n'est pas notre driver actuel
+							if(!recruited || recruited && !msg.getSender().equals(current_recruiter)) {
+								proposal.setPerformative(ACLMessage.PROPOSE);
+								proposal.addReceiver(msg.getSender());
+								proposal.setContent("ok");
+								proposal.setConversationId("covoit_cfp");
+							}
+							
 						}
 						else {
 							
 							proposal.setPerformative(ACLMessage.REFUSE);
 						}
-						//System.out.println(proposal.getInReplyTo());
 						myAgent.send(proposal);
 					}
 					else {
@@ -52,17 +70,31 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 					ACLMessage msg2 = myAgent.receive(mt2);
 					if(msg2 != null) {
 						System.out.println(getAID().getName()+" recruited");
-						recruited = true;
+						if(!recruited) {
+							recruited = true;
+							current_recruiter = msg2.getSender();
+							current_price = Integer.parseInt(msg2.getContent());
+						}
+						else {
+							double r = Math.random();
+							if(r < anulation_proba) {
+								//on est un rascal et on decide de lacher notre premier driver
+								//on l'en informe avec un air contrit (ou pas)
+								
+								ACLMessage cancel = new ACLMessage(ACLMessage.CANCEL);
+								cancel.addReceiver(current_recruiter);
+								cancel.setContent("I'm betraying you");//not usefull I know
+								cancel.setConversationId("cancel");
+								current_recruiter = msg2.getSender();
+								current_price = Integer.parseInt(msg2.getContent());
+							}
+						}
+						
 					}
 					else {
 						block();
 					}
 				}
-				/*try{
-					//Thread.sleep(2000);
-					//System.out.println("pause");
-				}
-				catch(InterruptedException e){}*/
 			}
 		} );
 		
@@ -71,9 +103,6 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 			protected MessageTemplate mt;
 			protected Boolean already_recruited;
 			protected void onTick() {
-				if(recruited) {
-					//System.out.println(getAID().getName()+" recruited at the beginning of the loop");
-				}
 				
 				if(!recruited) {
 					DFAgentDescription template = new DFAgentDescription();
@@ -82,15 +111,12 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 					template.addServices(sd);
 					try {
 						DFAgentDescription[] result = DFService.search(myAgent, template); 
-						//System.out.println("Found the following agents:");
 						acquaintances = new ArrayList(result.length);
 						for (int i = 0; i < result.length; ++i) {
 							acquaintances.add(result[i].getName());
-							//System.out.println(result[i].getName());
 						}
 						acquaintances.remove(getAID());
 						for(AID a:passengers) {
-							//System.out.println(a+" removed");
 							acquaintances.remove(a);
 						}
 						for(AID a:refused) {
@@ -112,11 +138,8 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 					cfp.setConversationId("covoit_cfp");
 					cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
 					myAgent.send(cfp);
-					/*mt = MessageTemplate.and(MessageTemplate.MatchConversationId("covoit_cfp"),
-							MessageTemplate.MatchInReplyTo(cfp.getReplyWith()));*/
 					//Prepare the template to get proposals
 					mt = MessageTemplate.MatchConversationId("covoit_cfp");
-					//mt = MessageTemplate.MatchInReplyTo(cfp.getReplyWith());
 					ACLMessage reply = myAgent.receive(mt);
 					if(reply != null) {
 						already_recruited = false;
@@ -156,13 +179,7 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 					else {
 						block();
 					}
-					
 				}
-				/*try{
-					Thread.sleep(1000);
-					//System.out.println("pause");
-				}
-				catch(InterruptedException e){}*/
 			}
 		} );
 		addBehaviour(new PleaseDie());

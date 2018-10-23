@@ -77,9 +77,7 @@ public class CovoitAgentGui extends JFrame{
 					String leavingTime = leavingTimeField.getText().trim();
 					String carScore = (String)carScoreField.getSelectedItem();
 					myAgent.updateTravel(startingCity, targetCity, Integer.parseInt(leavingTime), state_to_num.get(carScore),Integer.parseInt(places), Integer.parseInt(price));
-					/*titleField.setEnabled(false);
-					priceField.setEnabled(false);
-					stateField.setEnabled(false);*/
+					addButton.setEnabled(false);
 				}
 				catch (Exception e) {
 					JOptionPane.showMessageDialog(CovoitAgentGui.this, "Invalid values. "+e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE); 

@@ -252,8 +252,22 @@ public class CovoitAgent extends Agent {
 			ACLMessage msg = myAgent.receive(mt);
 			if(msg != null) {
 				if(msg.getConversationId().equals("apoptosis")) {
-					System.out.println("Agent "+getAID().getName()+" terminating.");
+					System.out.println("Agent "+getAID().getName()+" was aked to terminate. I did.");
 					doDelete();
+				}
+			}
+		}
+	}
+	
+	protected class cancelPassenger extends CyclicBehaviour{
+		public void action(){
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CANCEL);
+			ACLMessage msg = myAgent.receive(mt);
+			if(msg != null) {
+				if(msg.getConversationId().equals("apoptosis")) {
+					System.out.println("Agent "+getAID().getName()+" deletes "+msg.getSender().getName()+" of its passengers");
+					passengers.remove(msg.getSender());
+					nbPlaces ++;
 				}
 			}
 		}
