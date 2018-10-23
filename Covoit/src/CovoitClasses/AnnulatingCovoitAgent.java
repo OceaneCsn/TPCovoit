@@ -45,6 +45,7 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 
 						ACLMessage proposal = msg.createReply();
 						// if the proposed price is inferior than the the price of the agent's travel on its own
+						System.out.println("received price :"+msg.getContent()+ "current_price : "+String.valueOf(current_price));
 						if(Integer.parseInt(msg.getContent()) <= current_price) {
 							System.out.println("received price interesting");
 							//
@@ -80,11 +81,16 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 							if(r < anulation_proba) {
 								//on est un rascal et on decide de lacher notre premier driver
 								//on l'en informe avec un air contrit (ou pas)
-								
+								//la classe qui ecoute un CANCEL est dans la classe mere
+								//(meme un agent qui lui n'annulerait pas un trajet doit pouvoir gerer
+								//les annulations des autres)
 								ACLMessage cancel = new ACLMessage(ACLMessage.CANCEL);
 								cancel.addReceiver(current_recruiter);
 								cancel.setContent("I'm betraying you");//not usefull I know
 								cancel.setConversationId("cancel");
+								
+								
+								//mise a jour de son driver actuel
 								current_recruiter = msg2.getSender();
 								current_price = Integer.parseInt(msg2.getContent());
 							}
