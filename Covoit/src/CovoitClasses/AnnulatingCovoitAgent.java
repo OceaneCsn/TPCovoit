@@ -33,7 +33,7 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 	
 	protected void behaviors() {
 		current_price = price;
-		//sera appelée dans la méthode init() de CovoitAgent
+		//sera appelï¿½e dans la mï¿½thode init() de CovoitAgent
 		//passenger agent behavior
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			protected void onTick() {
@@ -110,7 +110,7 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 				if(!recruited) {
 					DFAgentDescription template = new DFAgentDescription();
 					ServiceDescription sd = new ServiceDescription();
-					sd.setType(startingCity+";"+targetCity);
+					sd.setType(but_agent.get_startingCity()+";"+but_agent.get_targetCity());
 					template.addServices(sd);
 					try {
 						DFAgentDescription[] result = DFService.search(myAgent, template); 
@@ -159,10 +159,10 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 							System.out.println(getAID().getName()+" recruited "+reply.getSender().getName());
 							System.out.println("Agreed price : "+confirm.getContent());
 							passengers.add(reply.getSender());
-							nbPlaces --;
+							but_agent.set_nbPlaces(but_agent.get_nbPlaces() - 1);
 							System.out.println("Number of passengers : "+String.valueOf(passengers.size()));
-							System.out.println("Remaning seats : "+String.valueOf(nbPlaces));
-							if(nbPlaces == 0){
+							System.out.println("Remaning seats : "+String.valueOf(but_agent.get_nbPlaces()));
+							if(but_agent.get_nbPlaces() == 0){
 								for(AID a : passengers) {
 									ACLMessage die = new ACLMessage(ACLMessage.REQUEST);
 									die.addReceiver(a);
