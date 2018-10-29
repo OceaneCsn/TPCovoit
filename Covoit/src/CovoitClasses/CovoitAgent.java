@@ -3,9 +3,6 @@ import java.util.*;
 
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.AgentContainer;
-import jade.core.Profile;
-import jade.core.ProfileImpl;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -13,9 +10,6 @@ import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
-import jade.core.Runtime;
-import jade.util.ExtendedProperties;
-import jade.wrapper.AgentController;
 
 
 
