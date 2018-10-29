@@ -37,13 +37,12 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 		//passenger agent behavior
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			protected void onTick() {
-				System.out.println(getAID().getName()+" : "+String.valueOf(passengers.size()));
+				System.out.println(getAID().getName()+" : "+String.valueOf(passengers.size())+" passengers, "+String.valueOf(current_price)+" current price");
 				if(passengers.size() == 0) {
 					MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
 					ACLMessage msg = myAgent.receive(mt);
-					System.out.println(getAID().getName()+" passengers empty!! ");
 					if(msg != null && !msg.getSender().equals(current_recruiter)) {
-						System.out.println(getAID().getName()+" : proposed price : "+msg.getContent()+ " current price : "+String.valueOf(current_price));
+						System.out.println(getAID().getName()+" received a proposed price : "+msg.getContent()+" from "+msg.getSender().getName()+ ". Current price : "+String.valueOf(current_price));
 						System.out.println("received from : "+ msg.getSender().getName());
 						ACLMessage proposal = msg.createReply();
 						// if the proposed price is inferior than the the price of the agent's travel on its own
@@ -96,7 +95,7 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 					}
 				}
 				else {
-					current_price = price/(2+passengers.size());
+					//current_price = price/(1+passengers.size());
 				}
 			}
 		} );
@@ -106,8 +105,9 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 			protected MessageTemplate mt;
 			protected Boolean already_recruited;
 			protected void onTick() {
-				current_price = price/(2+passengers.size());
+				
 				if(!recruited) {
+					current_price = price/(1+passengers.size());
 					DFAgentDescription template = new DFAgentDescription();
 					ServiceDescription sd = new ServiceDescription();
 					sd.setType(startingCity+";"+targetCity);
@@ -154,6 +154,7 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 							ACLMessage confirm = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 							confirm.addReceiver(reply.getSender());
 							confirm.setContent(String.valueOf(price/(2+passengers.size())));
+							System.out.println("envoi : "+confirm.getContent());
 							confirm.setConversationId("covoit");
 							myAgent.send(confirm);
 							System.out.println(getAID().getName()+" recruited "+reply.getSender().getName());
