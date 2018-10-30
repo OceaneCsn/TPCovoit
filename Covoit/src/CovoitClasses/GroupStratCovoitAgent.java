@@ -184,11 +184,6 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 					}
 					
 				}
-				/*try{
-					Thread.sleep(1000);
-					//System.out.println("pause");
-				}
-				catch(InterruptedException e){}*/
 			}
 		} );
 

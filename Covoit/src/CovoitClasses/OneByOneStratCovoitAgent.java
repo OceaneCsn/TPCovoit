@@ -147,7 +147,6 @@ public class OneByOneStratCovoitAgent extends CovoitAgent {
 					if(answer != null) {
 						step = 2;
 						if(answer.getPerformative()== ACLMessage.PROPOSE) {
-				
 							but_agent.set_nbPlaces(but_agent.get_nbPlaces() - 1);
 							ACLMessage confirm = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 							confirm.addReceiver(answer.getSender());

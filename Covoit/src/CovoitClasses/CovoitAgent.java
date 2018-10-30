@@ -1,4 +1,7 @@
 package CovoitClasses;
+import java.io.PrintWriter;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.*;
 
 import jade.core.AID;
@@ -20,6 +23,11 @@ import jade.wrapper.AgentController;
 public abstract class CovoitAgent extends Agent {
 	
 	static int counterAgents = 0; //counts number of existing agents
+	static String coalition_times = "";
+	//static BufferedWriter output = new BufferedWriter(new FileWriter("times.txt", true));
+	//catch{Error r
+	
+	
 	protected CovoitAgentGui myGui;
 	protected But but_agent;
 	protected ArrayList<AID> passengers;
@@ -28,7 +36,8 @@ public abstract class CovoitAgent extends Agent {
 	protected ArrayList<AID> acquaintances;
 	protected Boolean recruited;
 	//private 
-	
+	protected long creation_time;
+	protected long found_coalition_time;
 	protected void setup() {
 		myGui = new CovoitAgentGui(this);
 		myGui.showGui();
@@ -46,7 +55,7 @@ public abstract class CovoitAgent extends Agent {
 		passengers = new ArrayList<AID>();
 		refused = new ArrayList<AID>();
 		recruited = false;
-		
+		creation_time = System.currentTimeMillis();
 		counterAgents++;
 		
 		// Register the book-selling service in the yellow pages
@@ -75,9 +84,11 @@ public abstract class CovoitAgent extends Agent {
 		this.init();
 	}
 	
+	protected long get_creation_time() {
+		return creation_time;
+	}
+	
 	protected abstract void behaviors();
-	
-	
 	
 	// Put agent clean-up operations here
 	protected void takeDown() {
@@ -102,7 +113,10 @@ public abstract class CovoitAgent extends Agent {
 			ACLMessage msg = myAgent.receive(mt);
 			if(msg != null) {
 				if(msg.getConversationId().equals("apoptosis")) {
-					System.out.println("Agent "+getAID().getName()+" was aked to terminate. I did.");
+					coalition_times += String.valueOf(System.currentTimeMillis()-creation_time)+"\r\n";
+					try (PrintWriter out = new PrintWriter("Coalition_times.txt")) {
+					    out.println(coalition_times);
+					}catch(Exception e){System.out.println(e);}  
 					doDelete();
 				}
 			}

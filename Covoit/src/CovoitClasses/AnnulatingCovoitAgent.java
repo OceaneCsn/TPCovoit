@@ -9,7 +9,7 @@ import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
-
+import java.io.*; 
 
 public class AnnulatingCovoitAgent extends CovoitAgent {
 	
@@ -88,9 +88,6 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 					else {
 						block();
 					}
-				}
-				else {
-					//current_price = price/(1+passengers.size());
 				}
 			}
 		} );
@@ -171,7 +168,14 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 
 							System.out.println("Remaning seats : "+String.valueOf(but_agent.get_nbPlaces()));
 							if(but_agent.get_nbPlaces() == 0){
+								//found_coalition_time = 
+								coalition_times += String.valueOf(System.currentTimeMillis()-creation_time)+"\r\n";
+								try (PrintWriter out = new PrintWriter("Coalition_times.txt")) {
+								    out.println(coalition_times);
+								}catch(Exception e){System.out.println(e);}    
+								
 								for(AID a : passengers) {
+									
 									ACLMessage die = new ACLMessage(ACLMessage.REQUEST);
 									die.addReceiver(a);
 									die.setConversationId("apoptosis");
