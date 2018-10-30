@@ -1,4 +1,5 @@
 package CovoitClasses;
+import java.io.PrintWriter;
 import java.util.*;
 
 import jade.core.AID;
@@ -159,6 +160,11 @@ public class OneByOneStratCovoitAgent extends CovoitAgent {
 							System.out.println("Remaning seats : "+String.valueOf(but_agent.get_nbPlaces()));
 							
 							if(but_agent.get_nbPlaces() == 0){
+								coalition_times += String.valueOf(System.currentTimeMillis()-creation_time)+"\r\n";
+								try (PrintWriter out = new PrintWriter("Coalition_times.txt")) {
+								    out.println(coalition_times);
+								}catch(Exception e){System.out.println(e);} 
+								
 								//kills all the agents as they all formed their definitive coalition
 								for(AID a : passengers) {
 									ACLMessage die = new ACLMessage(ACLMessage.REQUEST);
