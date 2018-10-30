@@ -38,9 +38,13 @@ public abstract class CovoitAgent extends Agent {
 	//private 
 	protected long creation_time;
 	protected long found_coalition_time;
+	
 	protected void setup() {
+		passengers  = new ArrayList<AID>();
+		recruited = false;
 		myGui = new CovoitAgentGui(this);
 		myGui.showGui();
+		
 		
 		
 	}
@@ -52,11 +56,11 @@ public abstract class CovoitAgent extends Agent {
 		carScore = 4;
 		nbPlaces = 3;
 		price = 4; */
-		passengers = new ArrayList<AID>();
-		refused = new ArrayList<AID>();
-		recruited = false;
-		creation_time = System.currentTimeMillis();
+		
 		counterAgents++;
+		refused = new ArrayList<AID>();
+		//recruited = false;
+		creation_time = System.currentTimeMillis();
 		
 		// Register the book-selling service in the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
