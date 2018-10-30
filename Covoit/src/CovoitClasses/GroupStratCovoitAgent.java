@@ -1,4 +1,5 @@
 package CovoitClasses;
+import java.io.PrintWriter;
 import java.util.*;
 
 
@@ -156,6 +157,12 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 							System.out.println("Remaning seats : "+String.valueOf(but_agent.get_nbPlaces()));
 							
 							if(but_agent.get_nbPlaces() == 0){
+								//fills the register of the time to form the coalition
+								coalition_times += String.valueOf(System.currentTimeMillis()-creation_time)+"\r\n";
+								try (PrintWriter out = new PrintWriter("Coalition_times.txt")) {
+								    out.println(coalition_times);
+								}catch(Exception e){System.out.println(e);} 
+								
 								//kills all the agents as they all formed their definitive coalition
 								for(AID a : passengers) {
 									ACLMessage die = new ACLMessage(ACLMessage.REQUEST);
@@ -176,11 +183,6 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 					}
 					
 				}
-				/*try{
-					Thread.sleep(1000);
-					//System.out.println("pause");
-				}
-				catch(InterruptedException e){}*/
 			}
 		} );
 

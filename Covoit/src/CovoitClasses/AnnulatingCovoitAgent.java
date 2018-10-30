@@ -9,7 +9,7 @@ import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
-
+import java.io.*; 
 
 public abstract class AnnulatingCovoitAgent extends CovoitAgent {
 	
@@ -26,7 +26,6 @@ public abstract class AnnulatingCovoitAgent extends CovoitAgent {
 		anulation_proba = 1.0;
 	}
 	
-	protected abstract void behaviors();
 	
 	protected class update_current_price extends CyclicBehaviour{
 		public void action(){

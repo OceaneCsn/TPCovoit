@@ -1,6 +1,9 @@
 package CovoitClasses;
+import java.io.PrintWriter;
 import java.util.*;
 
+import CovoitClasses.AnnulatingCovoitAgent.update_current_price;
+import CovoitClasses.CovoitAgent.PleaseDie;
 import jade.core.AID;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
@@ -20,7 +23,7 @@ public class AnnulationGroupCovoitAgent extends AnnulatingCovoitAgent {
 	protected void setup() {
 		super.setup();
 	}
-	
+
 	protected void behaviors() {
 		current_price = price;
 		//sera appel�e dans la m�thode init() de CovoitAgent
@@ -28,7 +31,7 @@ public class AnnulationGroupCovoitAgent extends AnnulatingCovoitAgent {
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			protected void onTick() {
 				System.out.println(getAID().getName()+" : "+String.valueOf(passengers.size())+" passengers, "+String.valueOf(current_price)+" current price");
-				if(passengers.size() == 0  &&!processing) {
+				if(passengers.size() == 0 &&!processing) {
 					MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
 					ACLMessage msg = myAgent.receive(mt);
 					if(msg != null && !msg.getSender().equals(current_recruiter)) {
@@ -84,9 +87,6 @@ public class AnnulationGroupCovoitAgent extends AnnulatingCovoitAgent {
 					else {
 						block();
 					}
-				}
-				else {
-					//current_price = price/(1+passengers.size());
 				}
 			}
 		} );
@@ -167,7 +167,14 @@ public class AnnulationGroupCovoitAgent extends AnnulatingCovoitAgent {
 
 							System.out.println("Remaning seats : "+String.valueOf(but_agent.get_nbPlaces()));
 							if(but_agent.get_nbPlaces() == 0){
+								//found_coalition_time = 
+								coalition_times += String.valueOf(System.currentTimeMillis()-creation_time)+"\r\n";
+								try (PrintWriter out = new PrintWriter("Coalition_times.txt")) {
+								    out.println(coalition_times);
+								}catch(Exception e){System.out.println(e);}    
+								
 								for(AID a : passengers) {
+									
 									ACLMessage die = new ACLMessage(ACLMessage.REQUEST);
 									die.addReceiver(a);
 									die.setConversationId("apoptosis");
@@ -190,5 +197,6 @@ public class AnnulationGroupCovoitAgent extends AnnulatingCovoitAgent {
 		addBehaviour(new PleaseDie());
 		addBehaviour(new update_current_price());
 	}
+	
 
 }
