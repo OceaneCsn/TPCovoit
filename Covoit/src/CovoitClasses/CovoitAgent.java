@@ -1,10 +1,11 @@
 package CovoitClasses;
 import java.util.*;
 
-
-
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.AgentContainer;
+import jade.core.Profile;
+import jade.core.ProfileImpl;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -12,19 +13,20 @@ import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.core.Runtime;
+import jade.util.ExtendedProperties;
+import jade.wrapper.AgentController;
 
 
-public class CovoitAgent extends Agent {
+
+public abstract class CovoitAgent extends Agent {
 	
+	static int counterAgents = 0; //counts number of existing agents
 	protected CovoitAgentGui myGui;
-	protected String startingCity;
-	protected String targetCity;
-	protected int leavingTime;
-	protected int carScore;
-	protected int nbPlaces;
+	protected But but_agent;
 	protected ArrayList<AID> passengers;
 	protected ArrayList<AID> refused;
-	protected int price;
+	protected double price;
 	protected ArrayList<AID> acquaintances;
 	protected Boolean recruited;
 	//private 
@@ -32,7 +34,6 @@ public class CovoitAgent extends Agent {
 	protected void setup() {
 		myGui = new CovoitAgentGui(this);
 		myGui.showGui();
-		
 		
 		
 	}
@@ -48,11 +49,13 @@ public class CovoitAgent extends Agent {
 		refused = new ArrayList<AID>();
 		recruited = false;
 		
+		counterAgents++;
+		
 		// Register the book-selling service in the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
 		ServiceDescription sd = new ServiceDescription();
-		sd.setType(startingCity+";"+targetCity);
+		sd.setType(but_agent.get_startingCity()+";"+but_agent.get_targetCity());
 		sd.setName("JADE-covoit");
 		dfd.addServices(sd);
 		try {
@@ -66,161 +69,15 @@ public class CovoitAgent extends Agent {
 		this.behaviors();
 	}
 	
-	protected void behaviors() {
-		//passenger agent behavior
-		addBehaviour(new TickerBehaviour(this, 10000) {
-			protected void onTick() {
-				if(passengers.size() == 0 && !recruited) {
-					MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
-					ACLMessage msg = myAgent.receive(mt);
-					//System.out.println(getAID().getName()+" before received cfp "+msg.getPerformative());
-
-					if(msg != null) {
-						//System.out.println(getAID().getName()+" received cfp"+msg.getPerformative());
-
-						ACLMessage proposal = msg.createReply();
-						// if the proposed price is inferior than the the price of the agent's travel on its own
-						if(Integer.parseInt(msg.getContent()) <= price) {
-							//System.out.println("received price interesting");
-							proposal.setPerformative(ACLMessage.PROPOSE);
-							proposal.addReceiver(msg.getSender());
-							proposal.setContent("ok");
-							proposal.setConversationId("covoit_cfp");
-						}
-						else {
-							
-							proposal.setPerformative(ACLMessage.REFUSE);
-						}
-						//System.out.println(proposal.getInReplyTo());
-						myAgent.send(proposal);
-					}
-					else {
-						block();
-					}
-					MessageTemplate mt2 = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
-					ACLMessage msg2 = myAgent.receive(mt2);
-					if(msg2 != null) {
-						System.out.println(getAID().getName()+" recruited");
-						recruited = true;
-					}
-					else {
-						block();
-					}
-				}
-				/*try{
-					//Thread.sleep(2000);
-					//System.out.println("pause");
-				}
-				catch(InterruptedException e){}*/
-			}
-		} );
-		
-		//driver agent behavior
-		addBehaviour(new TickerBehaviour(this, 10000) {
-			protected MessageTemplate mt;
-			protected Boolean already_recruited;
-			protected void onTick() {
-				if(recruited) {
-					//System.out.println(getAID().getName()+" recruited at the beginning of the loop");
-				}
-				
-				if(!recruited) {
-					DFAgentDescription template = new DFAgentDescription();
-					ServiceDescription sd = new ServiceDescription();
-					sd.setType(startingCity+";"+targetCity);
-					template.addServices(sd);
-					try {
-						DFAgentDescription[] result = DFService.search(myAgent, template); 
-						acquaintances = new ArrayList(result.length);
-						for (int i = 0; i < result.length; ++i) {
-							acquaintances.add(result[i].getName());
-							//System.out.println(result[i].getName());
-						}
-						acquaintances.remove(getAID());
-						for(AID a:passengers) {
-							acquaintances.remove(a);
-						}
-						for(AID a:refused) {
-							acquaintances.remove(a);
-						}
-					}
-					catch (FIPAException fe) {
-						fe.printStackTrace();
-					}
-					
-					
-					//envoi aux passagers potentiels
-					ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
-					
-					for (int i = 0; i < acquaintances.size(); ++i) {
-						if(!passengers.contains(acquaintances.get(i))) {
-							cfp.addReceiver(acquaintances.get(i));
-						}
-					} 
-					cfp.setContent(String.valueOf(price/(2+passengers.size())));
-					cfp.setConversationId("covoit_cfp");
-					cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
-					myAgent.send(cfp);
-					//Prepare the template to get proposals
-					mt = MessageTemplate.MatchConversationId("covoit_cfp");
-					ACLMessage reply = myAgent.receive(mt);
-					if(reply != null) {
-						
-						if(reply.getPerformative()== ACLMessage.PROPOSE) {
-				
-							nbPlaces --;
-							ACLMessage confirm = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
-							confirm.addReceiver(reply.getSender());
-							confirm.setContent(String.valueOf(price/(2+passengers.size())));
-							passengers.add(reply.getSender());
-							confirm.setConversationId("covoit");
-							myAgent.send(confirm);
-							System.out.println(getAID().getName()+" accepted proposal from"+reply.getSender().getName());
-							System.out.println("Number of passengers : "+String.valueOf(passengers.size()));
-							System.out.println("Remaning seats : "+String.valueOf(nbPlaces));
-							
-							if(nbPlaces == 0){
-								//kills all the agents as they all formed their definitive coalition
-								for(AID a : passengers) {
-									ACLMessage die = new ACLMessage(ACLMessage.REQUEST);
-									die.addReceiver(a);
-									die.setConversationId("apoptosis");
-									myAgent.send(die);
-								}
-								doDelete();
-							}
-						}
-						
-						if(reply.getPerformative()== ACLMessage.REFUSE){
-							System.out.println(getAID().getName()+" refused proposal");
-						}
-					}
-					else {
-						block();
-					}
-					
-				}
-				/*try{
-					Thread.sleep(1000);
-					//System.out.println("pause");
-				}
-				catch(InterruptedException e){}*/
-			}
-		} );
-
-	}
-	
 	// initialize key variables
 	protected void updateTravel(String sCity, String tCity, Integer lTime, Integer cScore, Integer nbP, Integer pr) {
-		startingCity = sCity;
-		targetCity = tCity;
-		leavingTime = lTime;
-		carScore = cScore;
-		nbPlaces = nbP;
+		but_agent = new But(sCity,tCity,lTime,cScore,nbP);
 		price = pr;
-		System.out.println("Agent "+getAID().getName()+" going from "+startingCity+" to "+targetCity+ " at price "+String.valueOf(price));
+		System.out.println("Agent "+getAID().getName()+" going from "+this.but_agent.get_startingCity()+" to "+this.but_agent.get_targetCity()+ " at price "+String.valueOf(price));
 		this.init();
 	}
+	
+	protected abstract void behaviors();
 	
 	
 	
@@ -264,9 +121,23 @@ public class CovoitAgent extends Agent {
 				if(msg.getConversationId().equals("cancel")) {
 					System.out.println("Agent "+getAID().getName()+" deletes "+msg.getSender().getName()+" of its passengers");
 					passengers.remove(msg.getSender());
-					nbPlaces ++;
+
+					//sets the new price of all the other passengers that will have to pay more
+					double new_price = price /(1+passengers.size());
+					ACLMessage update = new ACLMessage(ACLMessage.INFORM);
+					for(AID a : passengers) {
+						update.addReceiver(a);
+					}
+					//also sends it to itself
+					update.addReceiver(getAID());
+					update.setConversationId("new price");
+					update.setContent(String.valueOf(new_price));
+					myAgent.send(update);
+					but_agent.set_nbPlaces(but_agent.get_nbPlaces() +1);
 				}
 			}
 		}
 	}
 }
+
+

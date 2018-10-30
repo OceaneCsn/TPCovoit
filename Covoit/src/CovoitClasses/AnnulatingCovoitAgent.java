@@ -1,9 +1,7 @@
 package CovoitClasses;
 import java.util.*;
 
-import CovoitClasses.CovoitAgent.PleaseDie;
 import jade.core.AID;
-import jade.core.Agent;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -21,19 +19,16 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 	
 	protected double anulation_proba;
 	protected AID current_recruiter;
-	protected int current_price;
+	protected double current_price;
 	
 	protected void setup() {
 		super.setup();
 		anulation_proba = 1.0;
-		
-		//System.out.println("current_price setup : "+String.valueOf(current_price));
-
 	}
 	
 	protected void behaviors() {
 		current_price = price;
-		//sera appelée dans la méthode init() de CovoitAgent
+		//sera appelï¿½e dans la mï¿½thode init() de CovoitAgent
 		//passenger agent behavior
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			protected void onTick() {
@@ -46,7 +41,7 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 						System.out.println("received from : "+ msg.getSender().getName());
 						ACLMessage proposal = msg.createReply();
 						// if the proposed price is inferior than the the price of the agent's travel on its own
-						if(Integer.parseInt(msg.getContent()) <= current_price) {
+						if(Double.parseDouble(msg.getContent()) <= current_price) {
 							double r = Math.random();
 							// on envoie une proposition que si le recruter n'est pas notre driver actuel
 							if(!recruited || recruited  && r < anulation_proba) {
@@ -70,7 +65,7 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 						if(!recruited) {
 							recruited = true;
 							current_recruiter = msg2.getSender();
-							current_price = Integer.parseInt(msg2.getContent());
+							current_price = Double.parseDouble(msg2.getContent());
 						}
 						else {
 							//on est un rascal et on decide de lacher notre premier driver
@@ -85,7 +80,7 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 							myAgent.send(cancel);							
 							//mise a jour de son driver actuel
 							current_recruiter = msg2.getSender();
-							current_price = Integer.parseInt(msg2.getContent());
+							current_price = Double.parseDouble(msg2.getContent());
 						
 						}
 						
@@ -110,7 +105,7 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 					current_price = price/(1+passengers.size());
 					DFAgentDescription template = new DFAgentDescription();
 					ServiceDescription sd = new ServiceDescription();
-					sd.setType(startingCity+";"+targetCity);
+					sd.setType(but_agent.get_startingCity()+";"+but_agent.get_targetCity());
 					template.addServices(sd);
 					try {
 						DFAgentDescription[] result = DFService.search(myAgent, template); 
@@ -154,16 +149,28 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 							ACLMessage confirm = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 							confirm.addReceiver(reply.getSender());
 							confirm.setContent(String.valueOf(price/(2+passengers.size())));
-							System.out.println("envoi : "+confirm.getContent());
+							current_price = Double.parseDouble(confirm.getContent());
 							confirm.setConversationId("covoit");
 							myAgent.send(confirm);
 							System.out.println(getAID().getName()+" recruited "+reply.getSender().getName());
 							System.out.println("Agreed price : "+confirm.getContent());
 							passengers.add(reply.getSender());
-							nbPlaces --;
+							but_agent.set_nbPlaces(but_agent.get_nbPlaces() - 1);
 							System.out.println("Number of passengers : "+String.valueOf(passengers.size()));
-							System.out.println("Remaning seats : "+String.valueOf(nbPlaces));
-							if(nbPlaces == 0){
+							//System.out.println("Remaning seats : "+String.valueOf(nbPlaces));
+							//updates the price of all the passengers, as it is divided between more agents
+							
+							ACLMessage update = new ACLMessage(ACLMessage.INFORM);
+							for(AID a : passengers) {
+								update.addReceiver(a);
+							}
+							//also sends it to itself
+							update.setConversationId("new price");
+							update.setContent(String.valueOf(current_price));
+							myAgent.send(update);
+							//kills the agents that formed a definitive coalition
+							System.out.println("Remaning seats : "+String.valueOf(but_agent.get_nbPlaces()));
+							if(but_agent.get_nbPlaces() == 0){
 								for(AID a : passengers) {
 									ACLMessage die = new ACLMessage(ACLMessage.REQUEST);
 									die.addReceiver(a);
@@ -185,6 +192,21 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 			}
 		} );
 		addBehaviour(new PleaseDie());
+		addBehaviour(new update_current_price());
+	}
+	
+	protected class update_current_price extends CyclicBehaviour{
+		public void action(){
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+			ACLMessage msg = myAgent.receive(mt);
+			if(msg != null) {
+				if(msg.getConversationId().equals("new price")) {
+					//sets the new price to a higher one as a member of the coalition has canceled
+					System.out.println("Agent "+getAID().getName()+" has new price : "+msg.getContent()+".");
+					current_price = Double.parseDouble(msg.getContent());	
+				}
+			}
+		}
 	}
 
 }
