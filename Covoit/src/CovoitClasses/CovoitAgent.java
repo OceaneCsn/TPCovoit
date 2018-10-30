@@ -20,7 +20,17 @@ import jade.core.Runtime;
 import jade.util.ExtendedProperties;
 import jade.wrapper.AgentController;
 
+
+/**
+ * Abstract class that defines an agent ready for covoiturage
+ * Will be used by: GroupStratCovoitAgent,OneByOneStratCovoitAgent, PatientCovoitAgent,
+ * AnnulationGroupCovoitAgent, AnnulationOneByOneCovoitAgent
+ * 
+ * @author oceane_louise
+ *
+ */
 public abstract class CovoitAgent extends Agent {
+	
 	
 	static int counterAgents = 0; //counts number of existing agents
 	static String coalition_times = "";
@@ -30,13 +40,16 @@ public abstract class CovoitAgent extends Agent {
 	
 	protected CovoitAgentGui myGui;
 	protected But but_agent;
-	protected ArrayList<AID> passengers;
-	protected ArrayList<AID> refused;
 	protected double price;
-	protected ArrayList<AID> acquaintances;
-	protected Boolean recruited;
-	protected Boolean processing;
-	//private 
+	
+	protected ArrayList<AID> passengers; //if agent becomes driver, list of passengers
+	protected ArrayList<AID> refused; //agents that refused this agent's offer
+	protected ArrayList<AID> acquaintances; //potential passengers to contact
+	
+	protected Boolean recruited; //TRUE if this agent has become passenger of another driver; else FALSE
+	
+	protected Boolean processing; //if agent has been contacted by another driver and hasn't answered yet
+	
 	protected long creation_time;
 	protected long found_coalition_time;
 	
@@ -78,6 +91,7 @@ public abstract class CovoitAgent extends Agent {
 		catch (FIPAException fe) {
 			fe.printStackTrace();
 		}
+		
 		addBehaviour(new PleaseDie());
 		addBehaviour(new cancelPassenger());
 		this.behaviors();
@@ -97,6 +111,7 @@ public abstract class CovoitAgent extends Agent {
 	
 	protected abstract void behaviors();
 	
+	
 	// Put agent clean-up operations here
 	protected void takeDown() {
 		// Deregister from the yellow pages
@@ -113,7 +128,11 @@ public abstract class CovoitAgent extends Agent {
 	}
 	
 
-	
+	/**
+	 * if this agent has joined another coalition and the coalition is complete:
+	 * coalition driver will ask agent to kill itself by sending REQUEST message
+	 *
+	 */
 	protected class PleaseDie extends CyclicBehaviour{
 		public void action(){
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
@@ -135,7 +154,7 @@ public abstract class CovoitAgent extends Agent {
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CANCEL);
 			ACLMessage msg = myAgent.receive(mt);
 			if(msg != null) {
-				System.out.println("canel received!");
+				System.out.println("cancel received!");
 				if(msg.getConversationId().equals("cancel")) {
 					System.out.println("Agent "+getAID().getName()+" deletes "+msg.getSender().getName()+" of its passengers");
 					passengers.remove(msg.getSender());

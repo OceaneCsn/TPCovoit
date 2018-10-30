@@ -156,6 +156,7 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 							//if other agent accepts
 							
 							but_agent.set_nbPlaces(but_agent.get_nbPlaces() - 1); //one less seat in this agent's car
+							
 							ACLMessage confirm = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 							confirm.addReceiver(reply.getSender());
 							confirm.setContent(String.valueOf(price/(2+passengers.size())));
