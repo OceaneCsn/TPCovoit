@@ -22,13 +22,6 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 public class GroupStratCovoitAgent extends CovoitAgent {
 	
 
-	protected But but_agent;
-	protected ArrayList<AID> passengers;
-	protected ArrayList<AID> refused;
-	protected int price;
-	protected ArrayList<AID> acquaintances;
-	protected Boolean recruited;
-
 //	protected But but_agent;
 //	protected ArrayList<AID> passengers;
 //	protected ArrayList<AID> refused;
@@ -45,33 +38,30 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 
 	
 	protected void behaviors() {
-
-		//passenger agent behavior
-
 		//passenger agent behavior, same as 1by1 Strategy
 
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			protected void onTick() {
-				if(passengers.size() == 0 && !recruited) {
+				if(passengers.size() == 0 && !recruited &&!processing) {
 					MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
 					ACLMessage msg = myAgent.receive(mt);
 					//System.out.println(getAID().getName()+" before received cfp "+msg.getPerformative());
 
 					if(msg != null) {
 						//System.out.println(getAID().getName()+" received cfp"+msg.getPerformative());
-
+						processing = true;
 						ACLMessage proposal = msg.createReply();
 						// if the proposed price is inferior than the the price of the agent's travel on its own
-						if(Integer.parseInt(msg.getContent()) <= price) {
+						if(Float.valueOf(msg.getContent()) <= (float) price) {
 							//System.out.println("received price interesting");
 							proposal.setPerformative(ACLMessage.PROPOSE);
-							proposal.addReceiver(msg.getSender());
 							proposal.setContent("ok");
 							proposal.setConversationId("covoit_cfp");
 						}
 						else {
 							
 							proposal.setPerformative(ACLMessage.REFUSE);
+							processing = false;
 						}
 						//System.out.println(proposal.getInReplyTo());
 						myAgent.send(proposal);
@@ -121,8 +111,10 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 							//System.out.println(result[i].getName());
 						}
 						acquaintances.remove(getAID());
+						//System.out.println("Passangers:");
 						for(AID a:passengers) {
 							acquaintances.remove(a);
+							//System.out.println(a);
 						}
 						for(AID a:refused) {
 							acquaintances.remove(a);
@@ -135,9 +127,9 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 					
 					//envoi aux passagers potentiels
 					ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
-					
 					for (int i = 0; i < acquaintances.size(); ++i) {
 						if(!passengers.contains(acquaintances.get(i))) {
+							//System.out.println(acquaintances.get(i).getName()+" added to receivers of CFP");
 							cfp.addReceiver(acquaintances.get(i));
 						}
 					} 

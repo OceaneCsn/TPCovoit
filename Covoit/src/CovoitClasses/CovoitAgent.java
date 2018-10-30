@@ -27,6 +27,7 @@ public abstract class CovoitAgent extends Agent {
 	protected double price;
 	protected ArrayList<AID> acquaintances;
 	protected Boolean recruited;
+	protected Boolean processing;
 	//private 
 	
 	protected void setup() {
@@ -46,6 +47,7 @@ public abstract class CovoitAgent extends Agent {
 		passengers = new ArrayList<AID>();
 		refused = new ArrayList<AID>();
 		recruited = false;
+		processing = false;
 		
 		counterAgents++;
 		
