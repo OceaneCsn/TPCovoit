@@ -17,8 +17,6 @@ import jade.core.Runtime;
 import jade.util.ExtendedProperties;
 import jade.wrapper.AgentController;
 
-
-
 public abstract class CovoitAgent extends Agent {
 	
 	static int counterAgents = 0; //counts number of existing agents
@@ -115,7 +113,6 @@ public abstract class CovoitAgent extends Agent {
 		public void action(){
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CANCEL);
 			ACLMessage msg = myAgent.receive(mt);
-			//System.out.println("wainting cancel received!");
 			if(msg != null) {
 				System.out.println("canel received!");
 				if(msg.getConversationId().equals("cancel")) {

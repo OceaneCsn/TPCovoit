@@ -157,7 +157,6 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 							passengers.add(reply.getSender());
 							but_agent.set_nbPlaces(but_agent.get_nbPlaces() - 1);
 							System.out.println("Number of passengers : "+String.valueOf(passengers.size()));
-							//System.out.println("Remaning seats : "+String.valueOf(nbPlaces));
 							//updates the price of all the passengers, as it is divided between more agents
 							
 							ACLMessage update = new ACLMessage(ACLMessage.INFORM);
@@ -169,6 +168,7 @@ public class AnnulatingCovoitAgent extends CovoitAgent {
 							update.setContent(String.valueOf(current_price));
 							myAgent.send(update);
 							//kills the agents that formed a definitive coalition
+
 							System.out.println("Remaning seats : "+String.valueOf(but_agent.get_nbPlaces()));
 							if(but_agent.get_nbPlaces() == 0){
 								for(AID a : passengers) {
