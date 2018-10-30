@@ -21,6 +21,7 @@ public class OneByOneStratCovoitAgent extends CovoitAgent {
 //	protected int price;
 //	protected ArrayList<AID> acquaintances;
 //	protected Boolean recruited;
+	protected Boolean finished = false;
 	
 	protected void setup() {
 		super.setup();
@@ -29,7 +30,7 @@ public class OneByOneStratCovoitAgent extends CovoitAgent {
 	
 	protected void init() {
 		super.init();
-		addBehaviour(new DriverBehaviour());
+		addBehaviour(new DriverLoop());
 	}
 
 	
@@ -37,28 +38,30 @@ public class OneByOneStratCovoitAgent extends CovoitAgent {
 		//passenger agent behavior, same as Group Strategy
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			protected void onTick() {
-				if(passengers.size() == 0 && !recruited) {
+				if(passengers.size() == 0 && !recruited &&!processing) {
+					System.out.println("Entered passenger behaviour for agent "+getAID().getName());
 					MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
 					ACLMessage msg = myAgent.receive(mt);
 					//System.out.println(getAID().getName()+" before received cfp "+msg.getPerformative());
 
 					if(msg != null) {
 						//System.out.println(getAID().getName()+" received cfp"+msg.getPerformative());
-
+						processing = true;
 						ACLMessage proposal = msg.createReply();
 						// if the proposed price is inferior than the the price of the agent's travel on its own
-						if(Integer.parseInt(msg.getContent()) <= price) {
+						if(Float.valueOf(msg.getContent()) <= (float) price) {
 							//System.out.println("received price interesting");
 							proposal.setPerformative(ACLMessage.PROPOSE);
-							proposal.addReceiver(msg.getSender());
 							proposal.setContent("ok");
 							proposal.setConversationId("covoit_cfp");
 						}
 						else {
 							
 							proposal.setPerformative(ACLMessage.REFUSE);
+							processing = false;
 						}
 						//System.out.println(proposal.getInReplyTo());
+						System.out.println("Proposal or refuse was sent");
 						myAgent.send(proposal);
 					}
 					else {
@@ -86,8 +89,9 @@ public class OneByOneStratCovoitAgent extends CovoitAgent {
 	}
 	
 	//driver agent behavior, DIFFERENT FROM GROUP STRATEGY
-	protected class DriverBehaviour extends CyclicBehaviour{
+	protected class DriverBehaviour extends OneShotBehaviour{
 		public void action(){
+			finished = false;
 			if(recruited) {
 				System.out.println(getAID().getName()+" recruited at the beginning of the loop");
 			}
@@ -111,6 +115,9 @@ public class OneByOneStratCovoitAgent extends CovoitAgent {
 					for(AID a:refused) {
 						acquaintances.remove(a);
 					}
+					System.out.println("Potential candidates: ");
+					for (AID a:acquaintances)
+						System.out.println(a);
 				}
 				catch (FIPAException fe) {
 					fe.printStackTrace();
@@ -187,20 +194,23 @@ public class OneByOneStratCovoitAgent extends CovoitAgent {
 					break;
 				case 2: //just to stop the switch-case
 					break;
-				}
-				
-				////////////////////////////////////////
-				
-				
-				
-				
-				
+				}			
 			}
+			
+			finished = true;
 			/*try{
 				Thread.sleep(1000);
 				//System.out.println("pause");
 			}
 			catch(InterruptedException e){}*/
+		}
+	}
+	
+	protected class DriverLoop extends CyclicBehaviour{
+		public void action() {
+			// DriverBehaviour will be called only if previous cycle is over
+			if(finished)
+				addBehaviour(new DriverBehaviour());
 		}
 	}
 }

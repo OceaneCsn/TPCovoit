@@ -35,6 +35,7 @@ public abstract class CovoitAgent extends Agent {
 	protected double price;
 	protected ArrayList<AID> acquaintances;
 	protected Boolean recruited;
+	protected Boolean processing;
 	//private 
 	protected long creation_time;
 	protected long found_coalition_time;
@@ -59,7 +60,9 @@ public abstract class CovoitAgent extends Agent {
 		
 		counterAgents++;
 		refused = new ArrayList<AID>();
-		//recruited = false;
+		recruited = false;
+		processing = false;
+
 		creation_time = System.currentTimeMillis();
 		
 		// Register the book-selling service in the yellow pages

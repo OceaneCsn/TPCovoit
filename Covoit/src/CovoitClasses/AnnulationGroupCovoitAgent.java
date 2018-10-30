@@ -2,12 +2,8 @@ package CovoitClasses;
 import java.io.PrintWriter;
 import java.util.*;
 
-
+import CovoitClasses.AnnulatingCovoitAgent.update_current_price;
 import CovoitClasses.CovoitAgent.PleaseDie;
-import jade.core.AID;
-import jade.core.Agent;
-import jade.core.AID;
-
 import jade.core.AID;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
@@ -18,53 +14,45 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 
 
-
-
-public class GroupStratCovoitAgent extends CovoitAgent {
+public class AnnulationGroupCovoitAgent extends AnnulatingCovoitAgent {
 	
-
-	protected But but_agent;
-	protected ArrayList<AID> passengers;
-	protected ArrayList<AID> refused;
-	protected int price;
-	protected ArrayList<AID> acquaintances;
-	protected Boolean recruited;
-
-
+	// ici toutes les methodes vont etre les memes (init, takedown...) a part les behaviors
+	// et le setup dans lequel on ajoute juste la proba d'annuler
+	//on redefinit juste la methode des behaviors et les autres seront celles de CovoitAgent
 	
 	protected void setup() {
 		super.setup();
 	}
 
-	
 	protected void behaviors() {
-
-		//passenger agent behavior, same as 1by1 Strategy
-
+		current_price = price;
+		//sera appel�e dans la m�thode init() de CovoitAgent
+		//passenger agent behavior
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			protected void onTick() {
-				if(passengers.size() == 0 && !recruited &&!processing) {
+				System.out.println(getAID().getName()+" : "+String.valueOf(passengers.size())+" passengers, "+String.valueOf(current_price)+" current price");
+				if(passengers.size() == 0 &&!processing) {
 					MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
 					ACLMessage msg = myAgent.receive(mt);
-					//System.out.println(getAID().getName()+" before received cfp "+msg.getPerformative());
-
-					if(msg != null) {
-						//System.out.println(getAID().getName()+" received cfp"+msg.getPerformative());
+					if(msg != null && !msg.getSender().equals(current_recruiter)) {
 						processing = true;
+						System.out.println(getAID().getName()+" received a proposed price : "+msg.getContent()+" from "+msg.getSender().getName()+ ". Current price : "+String.valueOf(current_price));
+						System.out.println("received from : "+ msg.getSender().getName());
 						ACLMessage proposal = msg.createReply();
 						// if the proposed price is inferior than the the price of the agent's travel on its own
-						if(Float.valueOf(msg.getContent()) <= (float) price) {
-							//System.out.println("received price interesting");
-							proposal.setPerformative(ACLMessage.PROPOSE);
-							proposal.setContent("ok");
-							proposal.setConversationId("covoit_cfp");
+						if(Double.parseDouble(msg.getContent()) <= current_price) {
+							double r = Math.random();
+							// on envoie une proposition que si le recruter n'est pas notre driver actuel
+							if(!recruited || recruited  && r < anulation_proba) {
+								proposal.setPerformative(ACLMessage.PROPOSE);
+								proposal.setContent("ok");
+								proposal.setConversationId("covoit_cfp");
+							}
 						}
 						else {
-							
 							proposal.setPerformative(ACLMessage.REFUSE);
 							processing = false;
 						}
-						//System.out.println(proposal.getInReplyTo());
 						myAgent.send(proposal);
 					}
 					else {
@@ -73,33 +61,44 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 					MessageTemplate mt2 = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
 					ACLMessage msg2 = myAgent.receive(mt2);
 					if(msg2 != null) {
-						System.out.println(getAID().getName()+" recruited");
-						recruited = true;
+						if(!recruited) {
+							recruited = true;
+							current_recruiter = msg2.getSender();
+							current_price = Double.parseDouble(msg2.getContent());
+						}
+						else {
+							//on est un rascal et on decide de lacher notre premier driver
+							//on l'en informe avec un air contrit (ou pas)
+							//la classe qui ecoute un CANCEL est dans la classe mere
+							//(meme un agent qui lui n'annulerait pas un trajet doit pouvoir gerer
+							//les annulations des autres)
+							ACLMessage cancel = new ACLMessage(ACLMessage.CANCEL);
+							cancel.addReceiver(current_recruiter);
+							cancel.setContent("I'm betraying you");//not useful I know
+							cancel.setConversationId("cancel");
+							myAgent.send(cancel);							
+							//mise a jour de son driver actuel
+							current_recruiter = msg2.getSender();
+							current_price = Double.parseDouble(msg2.getContent());
+						
+						}
+						
 					}
 					else {
 						block();
 					}
 				}
-				/*try{
-					//Thread.sleep(2000);
-					//System.out.println("pause");
-				}
-				catch(InterruptedException e){}*/
 			}
 		} );
 		
-
-		//driver agent behavior, DIFFERENT FROM 1BY1 STRATEGY
-
+		//driver agent behavior
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			protected MessageTemplate mt;
 			protected Boolean already_recruited;
 			protected void onTick() {
-				if(recruited) {
-					//System.out.println(getAID().getName()+" recruited at the beginning of the loop");
-				}
 				
 				if(!recruited) {
+					current_price = price/(1+passengers.size());
 					DFAgentDescription template = new DFAgentDescription();
 					ServiceDescription sd = new ServiceDescription();
 					sd.setType(but_agent.get_startingCity()+";"+but_agent.get_targetCity());
@@ -109,13 +108,10 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 						acquaintances = new ArrayList(result.length);
 						for (int i = 0; i < result.length; ++i) {
 							acquaintances.add(result[i].getName());
-							//System.out.println(result[i].getName());
 						}
 						acquaintances.remove(getAID());
-						//System.out.println("Passangers:");
 						for(AID a:passengers) {
 							acquaintances.remove(a);
-							//System.out.println(a);
 						}
 						for(AID a:refused) {
 							acquaintances.remove(a);
@@ -126,11 +122,11 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 					}
 					
 					
-					//envoi aux passagers potentiels
+					//envoi aux  passagers potentiels
 					ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
+					
 					for (int i = 0; i < acquaintances.size(); ++i) {
 						if(!passengers.contains(acquaintances.get(i))) {
-							//System.out.println(acquaintances.get(i).getName()+" added to receivers of CFP");
 							cfp.addReceiver(acquaintances.get(i));
 						}
 					} 
@@ -143,28 +139,42 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 					ACLMessage reply = myAgent.receive(mt);
 					if(reply != null) {
 						
-						if(reply.getPerformative()== ACLMessage.PROPOSE) {
-				
-							but_agent.set_nbPlaces(but_agent.get_nbPlaces() - 1);
+						
+						if(reply.getPerformative()== ACLMessage.PROPOSE && !passengers.contains(reply.getSender())) {
+							
 							ACLMessage confirm = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 							confirm.addReceiver(reply.getSender());
 							confirm.setContent(String.valueOf(price/(2+passengers.size())));
-							passengers.add(reply.getSender());
+							current_price = Double.parseDouble(confirm.getContent());
 							confirm.setConversationId("covoit");
 							myAgent.send(confirm);
-							System.out.println(getAID().getName()+" accepted proposal from"+reply.getSender().getName());
+							System.out.println(getAID().getName()+" recruited "+reply.getSender().getName());
+							System.out.println("Agreed price : "+confirm.getContent());
+							passengers.add(reply.getSender());
+							but_agent.set_nbPlaces(but_agent.get_nbPlaces() - 1);
 							System.out.println("Number of passengers : "+String.valueOf(passengers.size()));
-							System.out.println("Remaning seats : "+String.valueOf(but_agent.get_nbPlaces()));
+							//updates the price of all the passengers, as it is divided between more agents
 							
+							ACLMessage update = new ACLMessage(ACLMessage.INFORM);
+							for(AID a : passengers) {
+								update.addReceiver(a);
+							}
+							//also sends it to itself
+							update.setConversationId("new price");
+							update.setContent(String.valueOf(current_price));
+							myAgent.send(update);
+							//kills the agents that formed a definitive coalition
+
+							System.out.println("Remaning seats : "+String.valueOf(but_agent.get_nbPlaces()));
 							if(but_agent.get_nbPlaces() == 0){
-								//fills the register of the time to form the coalition
+								//found_coalition_time = 
 								coalition_times += String.valueOf(System.currentTimeMillis()-creation_time)+"\r\n";
 								try (PrintWriter out = new PrintWriter("Coalition_times.txt")) {
 								    out.println(coalition_times);
-								}catch(Exception e){System.out.println(e);} 
+								}catch(Exception e){System.out.println(e);}    
 								
-								//kills all the agents as they all formed their definitive coalition
 								for(AID a : passengers) {
+									
 									ACLMessage die = new ACLMessage(ACLMessage.REQUEST);
 									die.addReceiver(a);
 									die.setConversationId("apoptosis");
@@ -175,18 +185,18 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 						}
 						
 						if(reply.getPerformative()== ACLMessage.REFUSE){
-							System.out.println(getAID().getName()+" refused proposal");
+							System.out.println(getAID().getName()+" refused proposal from "+ reply.getSender().getName());
 						}
 					}
 					else {
 						block();
 					}
-					
 				}
 			}
 		} );
-
+		addBehaviour(new PleaseDie());
+		addBehaviour(new update_current_price());
 	}
+	
+
 }
-
-
