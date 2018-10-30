@@ -1,13 +1,13 @@
 package CovoitClasses;
 import java.util.*;
 
-<<<<<<< HEAD
+
 import CovoitClasses.CovoitAgent.PleaseDie;
 import jade.core.AID;
 import jade.core.Agent;
-=======
 import jade.core.AID;
->>>>>>> 538365c2657c2a3b624e4838e98df90a0f9717f8
+
+import jade.core.AID;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -21,21 +21,21 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 
 public class GroupStratCovoitAgent extends CovoitAgent {
 	
-<<<<<<< HEAD
+
 	protected But but_agent;
 	protected ArrayList<AID> passengers;
 	protected ArrayList<AID> refused;
 	protected int price;
 	protected ArrayList<AID> acquaintances;
 	protected Boolean recruited;
-=======
+
 //	protected But but_agent;
 //	protected ArrayList<AID> passengers;
 //	protected ArrayList<AID> refused;
 //	protected int price;
 //	protected ArrayList<AID> acquaintances;
 //	protected Boolean recruited;
->>>>>>> 538365c2657c2a3b624e4838e98df90a0f9717f8
+
 	
 	protected void setup() {
 		super.setup();
@@ -45,11 +45,11 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 
 	
 	protected void behaviors() {
-<<<<<<< HEAD
+
 		//passenger agent behavior
-=======
+
 		//passenger agent behavior, same as 1by1 Strategy
->>>>>>> 538365c2657c2a3b624e4838e98df90a0f9717f8
+
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			protected void onTick() {
 				if(passengers.size() == 0 && !recruited) {
@@ -97,11 +97,9 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 			}
 		} );
 		
-<<<<<<< HEAD
-		//driver agent behavior
-=======
+
 		//driver agent behavior, DIFFERENT FROM 1BY1 STRATEGY
->>>>>>> 538365c2657c2a3b624e4838e98df90a0f9717f8
+
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			protected MessageTemplate mt;
 			protected Boolean already_recruited;
