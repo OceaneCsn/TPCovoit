@@ -75,7 +75,6 @@ public abstract class CovoitAgent extends Agent {
 		refused = new ArrayList<AID>();
 		recruited = false;
 		processing = false;
-
 		creation_time = System.currentTimeMillis();
 		
 		// Register the book-selling service in the yellow pages

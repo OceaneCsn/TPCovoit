@@ -44,7 +44,7 @@ public class AnnulationGroupCovoitAgent extends AnnulatingCovoitAgent {
 				 * (NB: contrary to non-annulating agents, annulating agents will listen to CFPs
 				 * even if they have already joined a coalition)
 				 */
-				if(passengers.size() == 0 &&!processing) {
+				if(passengers.size() == 0) {
 					MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
 					ACLMessage msg = myAgent.receive(mt);
 					
