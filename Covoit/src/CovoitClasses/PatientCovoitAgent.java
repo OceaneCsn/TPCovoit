@@ -25,14 +25,13 @@ public class PatientCovoitAgent extends CovoitAgent {
 
 
 	protected int counter;
-	protected int waiting_time = 5;
+	protected int waiting_time = 4;
 	private HashMap<AID, Double> propositions = new HashMap<AID, Double>();
 	protected double current_price;
 	
 	protected void setup() {
 		super.setup();
 		counter = 0;
-		
 	}
 
 	
@@ -41,28 +40,28 @@ public class PatientCovoitAgent extends CovoitAgent {
 		//passenger agent behavior : now the agent will wait waiting time to send a proposal, to its best cfp
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			protected void onTick() {
+				System.out.println(getAID().getName()+" : current price "+String.valueOf(current_price)+" passengers size " +String.valueOf(passengers.size()));
+				System.out.println(String.valueOf(recruited));
 				if(passengers.size() == 0 && !recruited) {
-					
 					//checks if waiting_time has passed to contact the most interesting driver
 					if(counter % waiting_time==0 && counter > 0) {
 						
 						if(!propositions.isEmpty()) {
 							//takes the more interesting price and sends a proposition to
 							//the corresponding agent
-							System.out.println("propositions de "+getAID().getName());
+							System.out.println("**************** propositions de "+getAID().getName());
 							for(AID a : propositions.keySet()) {
 								System.out.println(a.getName()+" : "+String.valueOf(propositions.get(a)));
 							}
-							Map.Entry<AID, Double> maxEntry = null;
+							Map.Entry<AID, Double> minEntry = null;
 							for (Map.Entry<AID, Double> entry : propositions.entrySet())
 							{
-							    if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0)
+							    if (minEntry == null || entry.getValue().compareTo(minEntry.getValue()) < 0)
 							    {
-							        maxEntry = entry;
+							        minEntry = entry;
 							    }
 							}
-							
-							AID bestDriver = maxEntry.getKey();
+							AID bestDriver = minEntry.getKey();
 							System.out.println("sending propose to "+bestDriver.getName());
 							ACLMessage proposal = new ACLMessage(ACLMessage.PROPOSE);
 							proposal.addReceiver(bestDriver);
@@ -85,7 +84,7 @@ public class PatientCovoitAgent extends CovoitAgent {
 						if(Double.parseDouble(msg.getContent()) <= current_price){
 							//on stocke ce driver dans une hashmap
 							propositions.put(msg.getSender(),Double.parseDouble(msg.getContent()));
-							System.out.println(getAID().getName()+ " stored the nice price from "+msg.getSender().getName());
+							//System.out.println(getAID().getName()+ " stored the nice price from "+msg.getSender().getName());
 						}
 					}
 					else {
@@ -168,6 +167,16 @@ public class PatientCovoitAgent extends CovoitAgent {
 							System.out.println("Number of passengers : "+String.valueOf(passengers.size()));
 							System.out.println("Remaning seats : "+String.valueOf(but_agent.get_nbPlaces()));
 							
+							//updates the prices of all agents in passengers
+							ACLMessage update = new ACLMessage(ACLMessage.INFORM);
+							for(AID a : passengers) {
+								update.addReceiver(a);
+							}
+							
+							//also sends it to itself so it can change its price
+							update.setConversationId("new price");
+							update.setContent(String.valueOf(current_price));
+							myAgent.send(update);
 							if(but_agent.get_nbPlaces() == 0){
 								//fills the register of the time to form the coalition
 								coalition_times += String.valueOf(System.currentTimeMillis()-creation_time)+"\r\n";

@@ -172,6 +172,17 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 							System.out.println("Remaning seats : "+String.valueOf(but_agent.get_nbPlaces()));
 							//end of console time
 							
+							//updates the prices of all agents in the coalition
+							/*ACLMessage update = new ACLMessage(ACLMessage.INFORM);
+							for(AID a : passengers) {
+								update.addReceiver(a);
+							}
+							
+							//also sends it to itself so it can change its price
+							update.setConversationId("new price");
+							update.setContent(String.valueOf(current_price));
+							myAgent.send(update);*/
+							
 							if(but_agent.get_nbPlaces() == 0){
 								//fills the register of the time to form the coalition
 								coalition_times += String.valueOf(System.currentTimeMillis()-creation_time)+"\r\n";

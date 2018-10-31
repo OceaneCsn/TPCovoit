@@ -9,6 +9,6 @@
 <booleanAttribute key="org.eclipse.jdt.debug.ui.INCLUDE_EXTERNAL_JARS" value="true"/>
 <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="jade.Boot"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-gui -host localhost -port 12332 –agents.jade.Boot  Covoit:CovoitClasses.CovoitAgent"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-gui -host localhost -port 12333 –agents.jade.Boot  Covoit:CovoitClasses.CovoitAgent"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="Covoit"/>
 </launchConfiguration>
