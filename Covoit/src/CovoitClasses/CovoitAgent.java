@@ -72,6 +72,7 @@ public abstract class CovoitAgent extends Agent {
 		price = 4; */
 		
 		counterAgents++;
+		System.out.println("There are now "+counterAgents+" agents");
 		refused = new ArrayList<AID>();
 		recruited = false;
 		processing = false;
@@ -124,6 +125,8 @@ public abstract class CovoitAgent extends Agent {
 		myGui.dispose();
 		// Printout a dismissal message
 		System.out.println("Agent "+getAID().getName()+" terminating.");
+		//decrement agent counter
+		counterAgents--;
 	}
 	
 
