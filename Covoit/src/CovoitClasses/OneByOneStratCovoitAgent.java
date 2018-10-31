@@ -43,34 +43,37 @@ public class OneByOneStratCovoitAgent extends CovoitAgent {
 				 * - doesn't belong to another coalition
 				 * - isn't already in the process of negotating a deal with another agent
 				 */
-				if(passengers.size() == 0 && !recruited &&!processing) {
+				if(passengers.size() == 0 && !recruited) {
 					System.out.println("Entered passenger behaviour for agent "+getAID().getName());
 					
-					//prepares template to receive Call For Proposals from another agent
-					MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
-					ACLMessage msg = myAgent.receive(mt);
-
-					if(msg != null) {
-						
-						processing = true; //negociation begins
-						
-						ACLMessage proposal = msg.createReply();
-						// if the proposed price is inferior than the the price of the agent's travel on its own: accept
-						if(Float.valueOf(msg.getContent()) <= (float) price) {
-							//System.out.println("received price interesting");
-							proposal.setPerformative(ACLMessage.PROPOSE);
-							proposal.setContent("ok");
-							proposal.setConversationId("covoit_cfp");
+					if(!processing) {
+						//prepares template to receive Call For Proposals from another agent
+						MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
+						ACLMessage msg = myAgent.receive(mt);
+						System.out.println("passed processing");
+						if(msg != null) {
+							System.out.println(getAID().getName()+ "received cfp");
+							processing = true; //negociation begins
+							finished = false;
+							ACLMessage proposal = msg.createReply();
+							// if the proposed price is inferior than the the price of the agent's travel on its own: accept
+							if(Float.valueOf(msg.getContent()) <= (float) price) {
+								//System.out.println("received price interesting");
+								proposal.setPerformative(ACLMessage.PROPOSE);
+								proposal.setContent("ok");
+								proposal.setConversationId("covoit_cfp");
+							}
+							else {
+								
+								proposal.setPerformative(ACLMessage.REFUSE);
+								processing = false; //negociation ends with refusal
+								finished = true;
+							}
+							myAgent.send(proposal);
 						}
 						else {
-							
-							proposal.setPerformative(ACLMessage.REFUSE);
-							processing = false; //negociation ends with refusal
+							block();
 						}
-						myAgent.send(proposal);
-					}
-					else {
-						block();
 					}
 					MessageTemplate mt2 = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
 					ACLMessage msg2 = myAgent.receive(mt2);
@@ -101,7 +104,7 @@ public class OneByOneStratCovoitAgent extends CovoitAgent {
 			}
 			
 			if(!recruited) {
-				
+				//System.out.println(getAID().getName()+ " entered in driver");
 				/*
 				 * makes template of passengers with similar departure and arrival cities
 				 * (aka potential passengers)
@@ -145,10 +148,12 @@ public class OneByOneStratCovoitAgent extends CovoitAgent {
 				case 0:
 					// Send the cfp to seller i
 					ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
-					if(!passengers.contains(acquaintances.get(i))) {
-						cfp.addReceiver(acquaintances.get(i));
+					if(acquaintances.size()>0) {
+						if(!passengers.contains(acquaintances.get(i))) {
+							cfp.addReceiver(acquaintances.get(i));
+						}
+						i++;
 					}
-					i++;
 					if(i==acquaintances.size())
 					{ //so agent stops when it has asked all acquaintances
 						step = 2;
@@ -159,6 +164,7 @@ public class OneByOneStratCovoitAgent extends CovoitAgent {
 					cfp.setConversationId("covoit_cfp");
 					cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
 					myAgent.send(cfp);
+					System.out.println("cfp sent by "+getAID().getName());
 					step = 1;
 					break;
 				case 1:
@@ -217,10 +223,11 @@ public class OneByOneStratCovoitAgent extends CovoitAgent {
 					break;
 				case 2: //just to stop the switch-case once there are no more agents to contact
 					break;
-				}			
+				}
+				finished = true; //now another cycle of DriverBehaviour can be started by DriverLoop
 			}
 			
-			finished = true; //now another cycle of DriverBehaviour can be started by DriverLoop
+			 
 		}
 	}
 	
@@ -234,8 +241,10 @@ public class OneByOneStratCovoitAgent extends CovoitAgent {
 	 */
 	protected class DriverLoop extends CyclicBehaviour{
 		public void action() {
+			
 			if(finished)
 				addBehaviour(new DriverBehaviour());
+				//System.out.println(finished);
 		}
 	}
 }

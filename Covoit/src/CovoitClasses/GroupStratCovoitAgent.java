@@ -26,56 +26,62 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
  */
 public class GroupStratCovoitAgent extends CovoitAgent {
 
-	
+	protected double current_price;
+
 	protected void setup() {
 		super.setup();
+		
 	}
 
 	
 	protected void behaviors() {
 
 		//passenger agent behavior, same as 1by1 Strategy
-
+		current_price = price;
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			protected void onTick() {
 				/*if agent 
 				 * - isn't driver of its own coalition
 				 * - doesn't belong to another coalition
-				 * - isn't already in the process of negotating a deal with another agent
+				 * - isn't already in the process of negotiating a deal with another agent
 				 */
-				if(passengers.size() == 0 && !recruited &&!processing) {
+				if(passengers.size() == 0 && !recruited) {
 					System.out.println("Entered passenger behaviour for agent "+getAID().getName());
 					
-					//prepares template to receive Call For Proposals from another agent
-					MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
-					ACLMessage msg = myAgent.receive(mt);
-
-					if(msg != null) {
-						
-						processing = true; //negociation begins
-						
-						ACLMessage proposal = msg.createReply();
-						// if the proposed price is inferior than the the price of the agent's travel on its own: accept
-						if(Float.valueOf(msg.getContent()) <= (float) price) {
-							//System.out.println("received price interesting");
-							proposal.setPerformative(ACLMessage.PROPOSE);
-							proposal.setContent("ok");
-							proposal.setConversationId("covoit_cfp");
+					if(!processing)
+					{
+						//prepares template to receive Call For Proposals from another agent
+						MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
+						ACLMessage msg = myAgent.receive(mt);
+	
+						if(msg != null) {
+							
+							processing = true; //negociation begins
+							
+							ACLMessage proposal = msg.createReply();
+							// if the proposed price is inferior than the the price of the agent's travel on its own: accept
+							if(Float.valueOf(msg.getContent()) <= (float) current_price) {
+								//System.out.println("received price interesting");
+								proposal.setPerformative(ACLMessage.PROPOSE);
+								proposal.setContent("ok");
+								proposal.setConversationId("covoit_cfp");
+							}
+							else {
+								
+								proposal.setPerformative(ACLMessage.REFUSE);
+								processing = false; //negociation ends with refusal
+							}
+							myAgent.send(proposal);
 						}
 						else {
-							
-							proposal.setPerformative(ACLMessage.REFUSE);
-							processing = false; //negociation ends with refusal
+							block();
 						}
-						myAgent.send(proposal);
-					}
-					else {
-						block();
 					}
 					MessageTemplate mt2 = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
 					ACLMessage msg2 = myAgent.receive(mt2);
 					if(msg2 != null) {
 						System.out.println(getAID().getName()+" recruited");
+						current_price = Double.parseDouble(msg2.getContent());
 						recruited = true; //negociation ends with acceptance
 						processing = false; //technically useless here since agent has joined a coalition and cannot renege on deal
 						//will be useful for Annulating agents that can renege though
@@ -156,13 +162,12 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 							//if other agent accepts
 							
 							but_agent.set_nbPlaces(but_agent.get_nbPlaces() - 1); //one less seat in this agent's car
-							
+							current_price = price/(2+passengers.size());
 							ACLMessage confirm = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 							confirm.addReceiver(reply.getSender());
 							confirm.setContent(String.valueOf(price/(2+passengers.size())));
 							
 							passengers.add(reply.getSender()); //other agent added to list of passengers
-							
 							confirm.setConversationId("covoit");
 							myAgent.send(confirm);
 							

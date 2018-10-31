@@ -41,7 +41,6 @@ public class PatientCovoitAgent extends CovoitAgent {
 		addBehaviour(new TickerBehaviour(this, 10000) {
 			protected void onTick() {
 				System.out.println(getAID().getName()+" : current price "+String.valueOf(current_price)+" passengers size " +String.valueOf(passengers.size()));
-				System.out.println(String.valueOf(recruited));
 				if(passengers.size() == 0 && !recruited) {
 					//checks if waiting_time has passed to contact the most interesting driver
 					if(counter % waiting_time==0 && counter > 0) {
