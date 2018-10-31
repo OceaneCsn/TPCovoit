@@ -1,4 +1,7 @@
 package CovoitClasses;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 
@@ -46,7 +49,7 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 				 * - isn't already in the process of negotiating a deal with another agent
 				 */
 				if(passengers.size() == 0 && !recruited) {
-					System.out.println("Entered passenger behaviour for agent "+getAID().getName());
+					//System.out.println("Entered passenger behaviour for agent "+getAID().getName());
 					
 					if(!processing)
 					{
@@ -102,7 +105,7 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 			
 			protected void onTick() {
 				if(recruited) {
-					System.out.println(getAID().getName()+" recruited at the beginning of the loop");
+					//System.out.println(getAID().getName()+" recruited at the beginning of the loop");
 				}
 				
 				if(!recruited) {
@@ -189,12 +192,21 @@ public class GroupStratCovoitAgent extends CovoitAgent {
 							myAgent.send(update);*/
 							
 							if(but_agent.get_nbPlaces() == 0){
+								System.out.println("Leaving for "+but_agent.get_targetCity()+"!");
 								//fills the register of the time to form the coalition
 								coalition_times += String.valueOf(System.currentTimeMillis()-creation_time)+"\r\n";
-								try (PrintWriter out = new PrintWriter("Coalition_times.txt")) {
-								    out.println(coalition_times);
-								}catch(Exception e){System.out.println(e);} 
+//								try (PrintWriter out = new PrintWriter("Coalition_times.txt")) {
+//								    out.println("Coalition led by %s left at: %s",getAID().getName(),coalition_times);
+//								}catch(Exception e){System.out.println(e);} 
 								
+								try(FileWriter fw = new FileWriter("Coalition_times.txt", true);
+									    BufferedWriter bw = new BufferedWriter(fw);
+									    PrintWriter out = new PrintWriter(bw))
+									{
+										out.println("Coalition led by "+getAID().getName()+" left at: "+coalition_times);
+									} catch (IOException e) {
+									    //exception handling left as an exercise for the reader
+									}
 								//kills all the agents as they all formed their definitive coalition
 								for(AID a : passengers) {
 									ACLMessage die = new ACLMessage(ACLMessage.REQUEST);

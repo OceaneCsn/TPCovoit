@@ -2,6 +2,7 @@ package CovoitClasses;
 import java.io.PrintWriter;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 import jade.core.AID;
@@ -142,9 +143,18 @@ public abstract class CovoitAgent extends Agent {
 			if(msg != null) {
 				if(msg.getConversationId().equals("apoptosis")) {
 					coalition_times += String.valueOf(System.currentTimeMillis()-creation_time)+"\r\n";
-					try (PrintWriter out = new PrintWriter("Coalition_times.txt")) {
-					    out.println(coalition_times);
-					}catch(Exception e){System.out.println(e);}  
+//					try (PrintWriter out = new PrintWriter("Coalition_times.txt")) {
+//					    out.println(coalition_times);
+//					}catch(Exception e){System.out.println(e);}  
+					
+					try(FileWriter fw = new FileWriter("Coalition_times.txt", true);
+						    BufferedWriter bw = new BufferedWriter(fw);
+						    PrintWriter out = new PrintWriter(bw))
+						{
+							out.println("Agent "+getAID().getName()+" died after: "+coalition_times);
+						} catch (IOException e) {
+						    //exception handling left as an exercise for the reader
+						}
 					doDelete();
 				}
 			}
